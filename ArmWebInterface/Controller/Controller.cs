@@ -2,6 +2,7 @@
 using ArmWebInterface.Web;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -11,10 +12,13 @@ namespace ArmWebInterface.Controller
 {
     public static class Controller
     {
-        [Controller("say")]
-        public static String sendCommand(HttpListenerRequest request, HttpArgument argument)
+        public static Queue<String> needToDo = new Queue<String>();
+
+        [Controller("~/say/")]
+        public static String sendCommand(HttpListenerContext context, String text)
         {
-            String cookie = request.Cookies["session"].Value;
+            context.Response.AddHeader("Access-Control-Allow-Origin", "*");
+            String cookie = context.Request.Cookies["session"].Value;
             CleverbotConversation activeConversation;
             bool flag = false;
             if (Sessions.active.ContainsKey(cookie))
@@ -23,28 +27,37 @@ namespace ArmWebInterface.Controller
             }
             else
             {
-                activeConversation = Cleverbot.Cleverbot.buildSession(argument.value);
+                activeConversation = Cleverbot.Cleverbot.buildSession(text);
                 flag = true;
                 Sessions.active.Add(cookie, activeConversation);
             }
             if (flag)
             {
+                needToDo.Enqueue(activeConversation.latestReply.content);
                 return activeConversation.latestReply.content;
             }
             else
             {
-                return activeConversation.speak(argument.value).content;
+                needToDo.Enqueue(activeConversation.speak(text).content);
+                return activeConversation.speak(text).content;
             }
         }
-        [Controller("reset")]
-        public static String resetSession(HttpListenerRequest request, HttpArgument argument)
+        [Controller("~/reset/")]
+        public static String resetSession(HttpListenerContext context)
         {
-            String cookie = request.Cookies["session"].Value;
+            String cookie = context.Request.Cookies["session"].Value;
             if (Sessions.active.ContainsKey(cookie))
             {
                 Sessions.active.Remove(cookie);
             }
             return "OK";
+        }
+
+        [Controller("~/status/")]
+        public static String getStatus(HttpListenerContext context)
+        {
+            if (needToDo.Count > 0) return needToDo.Dequeue();
+            return String.Empty;
         }
     }
 }

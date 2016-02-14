@@ -13,10 +13,10 @@ namespace ArmWebInterface.Web
     using System.Text;
     public class WebServer
     {
-        private readonly HttpListener _listener = new HttpListener();
-        private readonly Func<HttpListenerRequest, string> _responderMethod;
+        public readonly HttpListener _listener = new HttpListener();
+        private readonly Func<HttpListenerContext, string> _responderMethod;
 
-        public WebServer(string[] prefixes, Func<HttpListenerRequest, string> method)
+        public WebServer(string[] prefixes, Func<HttpListenerContext, string> method)
         {
             if (!HttpListener.IsSupported)
                 throw new NotSupportedException(
@@ -35,7 +35,7 @@ namespace ArmWebInterface.Web
             _listener.Start();
         }
 
-        public WebServer(Func<HttpListenerRequest, string> method, params string[] prefixes)
+        public WebServer(Func<HttpListenerContext, string> method, params string[] prefixes)
             : this(prefixes, method)
         { }
 
@@ -52,12 +52,8 @@ namespace ArmWebInterface.Web
                             var ctx = c as HttpListenerContext;
                             try
                             {
-                                string rstr = _responderMethod(ctx.Request);
+                                string rstr = _responderMethod(ctx);
                                 byte[] buf = Encoding.UTF8.GetBytes(rstr);
-                                if (ctx.Request.Cookies.Count == 0)
-                                {
-                                    ctx.Response.AddHeader("Set-Cookie", "session=" + randomString(32));
-                                }
                                 ctx.Response.ContentLength64 = buf.Length;
                                 ctx.Response.OutputStream.Write(buf, 0, buf.Length);
                             }
@@ -74,14 +70,6 @@ namespace ArmWebInterface.Web
             });
         }
 
-        public string randomString(int length)
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
-            return new string(Enumerable.Repeat(chars, length)
-              .Select(s => s[random.Next(s.Length)]).ToArray());
-        }
-
         public void stop()
         {
             _listener.Stop();
@@ -92,10 +80,10 @@ namespace ArmWebInterface.Web
     [AttributeUsage(AttributeTargets.Method)]
     public class ControllerAttribute : Attribute
     {
-        public String key;
-        public ControllerAttribute(String key)
+        public String path;
+        public ControllerAttribute(String path)
         {
-            this.key = key;
+            this.path = path;
         }
     }
 }

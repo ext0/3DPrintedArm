@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arm Control</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <style>
+        body {
+            max-width: 500px;
+            margin: 2em auto;
+            font-size: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .buttons-wrapper {
+            text-align: center;
+        }
+
+        .hidden
+        {
+            display: none;
+        }
+
+        .console {
+            display: block;
+            width: 100%;
+            height: 5em;
+            overflow-y: scroll;
+            border: 1px solid #333333;
+            line-height: 1.3em;
+        }
+
+        .button-demo
+        {
+            padding: 0.5em;
+            display: inline-block;
+            margin: 1em auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Westwood 3D Printing Club</h1>
+    <h2>Transcription</h2>
+
+    <textarea id="transcription" class="console" readonly="readonly" title="transcription"></textarea>
+
+    <span>Results:</span>
+
+    <h3>Log</h3>
+    <div class="console" id="log"></div>
+
+    <script type="text/javascript" src="/Source.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            conversation.beginConversation();
+        });
+    </script>
+
+
+
+</body>
+</html>
